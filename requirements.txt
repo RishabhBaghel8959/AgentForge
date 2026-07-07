@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+langchain
+langchain-ollama
+python-docx
+pydantic
+python-dotenv
+httpx
+rich
+orjson

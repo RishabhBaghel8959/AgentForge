@@ -2,32 +2,27 @@ import json
 
 from app.llm.ollama_client import OllamaClient
 from app.utils.prompts import PLANNER_PROMPT
+from app.utils.json_parser import JSONParser
+from app.utils.logger import info
+
 
 
 class Planner:
 
     def __init__(self):
-        self.llm = OllamaClient()
 
-    def create_plan(self, request: str):
+        self.client = OllamaClient()
 
-        prompt = PLANNER_PROMPT.format(request=request)
+    def create_plan(self, request):
 
-        response = self.llm.generate(prompt)
+        info("Planning started...")
+
+        prompt = PLANNER_PROMPT.format(
+            request=request
+        )
 
         try:
-            return json.loads(response)
-
-        except Exception:
-
-            return {
-                "tasks": [
-                    {
-                        "id": 1,
-                        "task": "Unable to Parse LLM Response",
-                        "priority": "High",
-                        "status": "Failed"
-                    }
-                ],
-                "raw_response": response
-            }
+            response = self.client.generate(prompt)
+        except Exception as e:
+            response = f"Generation Failed: {e}"
+        return JSONParser.extract_json(response)

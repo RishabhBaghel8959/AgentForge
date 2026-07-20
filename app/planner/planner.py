@@ -4,7 +4,7 @@ from app.llm.ollama_client import OllamaClient
 from app.utils.prompts import PLANNER_PROMPT
 from app.utils.json_parser import JSONParser
 from app.utils.logger import info
-
+from app.core.logger import logger
 
 
 class Planner:
@@ -15,7 +15,7 @@ class Planner:
 
     def create_plan(self, request):
 
-        info("Planning started...")
+        logger.info("Planning started...")
 
         prompt = PLANNER_PROMPT.format(
             request=request

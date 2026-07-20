@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#09111f" />
+    <title>FluidAI · Agent Studio</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="FluidAI home"><span class="brand-mark"><i></i><i></i><i></i></span><span>fluid<span>AI</span></span></a>
+        <div class="system-status"><span></span> Ollama connected</div>
+      </header>
+      <section class="hero">
+        <div class="eyebrow"><span></span> AUTONOMOUS DOCUMENT WORKSPACE</div>
+        <h1>From an idea to a polished<br /><em>document, thoughtfully.</em></h1>
+        <p>Give your AI agent a goal. It plans the work, creates every section, reviews the result, and hands you a ready-to-share document.</p>
+      </section>
+      <section class="workspace" aria-label="Agent workspace">
+        <form id="agent-form" class="request-card">
+          <div class="card-label"><span>01</span> DEFINE YOUR REQUEST</div>
+          <label for="request">What would you like to create?</label>
+          <textarea id="request" name="request" maxlength="1500" required placeholder="e.g. Create a business proposal for an eco-friendly packaging company entering the Indian market."></textarea>
+          <div class="request-footer"><span id="character-count">0 / 1500</span><button id="run-button" type="submit"><span>Start building</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" /></svg></button></div>
+        </form>
+        <aside class="how-card">
+          <div class="card-label"><span>HOW IT WORKS</span></div>
+          <ol><li><b>Plan</b><small>Turns your brief into a focused outline.</small></li><li><b>Compose</b><small>Writes each section with your goal in mind.</small></li><li><b>Review</b><small>Refines tone, clarity, and structure.</small></li></ol>
+          <div class="model-note"><span class="spark">✦</span> Powered locally by <strong>Qwen 2.5</strong></div>
+        </aside>
+      </section>
+      <section id="activity" class="activity hidden" aria-live="polite">
+        <div class="activity-heading"><div><div class="card-label"><span>02</span> AGENT ACTIVITY</div><h2 id="activity-title">Preparing your workspace</h2></div><div class="spinner" aria-label="Working"></div></div>
+        <div class="progress-track"><span id="progress-bar"></span></div>
+        <div class="stage-list">
+          <div class="stage active" data-stage="plan"><span>1</span><div><b>Planning</b><small>Mapping the best approach</small></div></div>
+          <div class="stage" data-stage="compose"><span>2</span><div><b>Composing</b><small>Developing your content</small></div></div>
+          <div class="stage" data-stage="review"><span>3</span><div><b>Reviewing</b><small>Polishing every detail</small></div></div>
+          <div class="stage" data-stage="deliver"><span>4</span><div><b>Delivering</b><small>Preparing your DOCX</small></div></div>
+        </div>
+      </section>
+      <section id="results" class="results hidden">
+        <div class="results-heading"><div><div class="card-label"><span>03</span> COMPLETED WORK</div><h2 id="document-title">Your document is ready</h2><p id="result-summary"></p></div><a id="download-link" class="download-button" href="#" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3" /></svg>Download DOCX</a></div>
+        <div class="result-grid"><section class="plan-card"><h3>Execution plan</h3><p id="plan-goal"></p><div id="assumptions" class="assumptions"></div><div id="task-list" class="task-list"></div></section><section class="document-card"><div class="document-toolbar"><span class="doc-dot"></span><span>Generated preview</span><span id="section-count"></span></div><div id="document-preview" class="document-preview"></div></section></div>
+      </section>
+      <div id="error-message" class="error hidden" role="alert"></div>
+      <footer>FLUIDAI AGENT STUDIO <span>·</span> BUILT FOR THOUGHTFUL WORK</footer>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

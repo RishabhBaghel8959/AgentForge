@@ -6,7 +6,7 @@ AgentForge is a local, authenticated AI document workspace. After signing in, de
 
 - Local user accounts backed by SQLite and password hashing with PBKDF2.
 - 24-hour HS256 JWT sessions for the browser and API.
-- A typed multi-agent workflow: orchestrator -> planner -> writer -> reviewer -> DOCX generator.
+- A supervised graph: research and planning -> execution -> verification -> quality gate -> DOCX generator.
 - Bounded retries, model timeouts, validated outputs, and explicit failed-run states.
 - Persistent SQLite tracing for every run: agents, models, attempts, token counts, handoffs, errors, and final outcome.
 - Local Ollama inference; the default model is `qwen2.5:7b`.
@@ -60,11 +60,12 @@ The development entry point deliberately runs without Uvicorn auto-reload to avo
 
 ```text
 User request
-  -> Orchestrator creates typed run state
-  -> Planner returns a validated execution plan
-  -> Writer produces one validated section per task
-  -> Reviewer validates polished sections
-  -> DOCX generator saves the final document
+  -> Supervisor classifies the request and enforces budgets
+  -> Research and Planning run with controlled parallelism
+  -> Execution writes validated sections
+  -> Verification checks constraints and quality
+  -> Quality Gate delivers, repairs once, or stops
+  -> DOCX generator saves only quality-gated sections
   -> Run trace is persisted in SQLite
 ```
 
@@ -152,4 +153,4 @@ Run the test suite after installing dependencies:
 - **Page does not load:** Run `python run.py` from the activated virtual environment; `run.py` uses `reload=False` for Windows compatibility.
 - **Ollama connection failed:** Start Ollama and confirm its API is at `http://localhost:11434`.
 - **Model not found:** Run `ollama pull qwen2.5:7b`, or set another local model in `app/llm/ollama_client.py`.
-- **A document run failed:** Retrieve `GET /runs/{run_id}` while signed in; the trace contains the failing agent, retry attempt, and error.
+- **A document run failed:** Retrieve `GET /runs/{run_id}` while signed in; the trace contains the failing agent, retry attempts, token counts, and error details. Verification results are recorded in the `verified` event type for every section.

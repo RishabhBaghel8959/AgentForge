@@ -1,32 +1,36 @@
-# AgentForge execution architecture
-
-`AgentExecutor` is the orchestrator and owns the only mutable `WorkflowState`. Specialist agents do not call each other and cannot write files or execute tools.
+# AgentForge supervised graph
 
 ```text
-request → orchestrator → planner → writer (once per validated task) → reviewer → DOCX generator
-                         │                 │                              │
-                         └────────── RunTracer records every handoff ──────┘
+Client/API
+    -> Supervisor: classify request and enforce budgets
+    -> Research Agent  ||  Planning Agent
+    -> Execution Agent (bounded parallel section generation)
+    -> Verification Agent (bounded parallel checks)
+    -> Quality Gate: deliver | one repair round | stop
+    -> Final result + persisted run trace
 ```
 
-| Component | Typed input → output | Permission | Completion rule |
+## Nodes and contracts
+
+| Node | Input -> output | Permission | Termination condition |
 | --- | --- | --- | --- |
-| Planner | `str` → `ExecutionPlan` | Model completion only | Valid JSON matches `ExecutionPlan` |
-| Writer | `ExecutionPlan`, `Task` → `str` | Model completion only | Non-empty section within size limit |
-| Reviewer | title, section → `str` | Model completion only | Non-empty reviewed section within size limit |
-| Orchestrator | request, user ID → result | Calls agents; creates DOCX | All stages validate and DOCX saves |
-| RunTracer | events → SQLite rows | Append-only tracing | Event persisted |
+| Supervisor | request -> admitted graph | Dispatch only; no model tools | Reject invalid input or dispatch accepted graph |
+| Research | request -> `ResearchBrief` | Local model only; no retrieval tools | Valid JSON and no claimed external sources |
+| Planning | request -> `ExecutionPlan` | Local model only | Valid typed JSON, 1-8 unique tasks |
+| Execution | plan/task -> section | Local model only | Non-empty section below size limit |
+| Verification | request/section -> `VerificationResult` | Local model only | Valid typed JSON with score and issues |
+| Quality Gate | verification -> pass/repair/stop | Deterministic checks only | Score >= 70 and pass=true, or one repair budget exhausted |
+| DOCX generator | validated sections -> `.docx` | Orchestrator-only filesystem write | File saved successfully |
 
-## Safety policy
+## Safety and recovery
 
-- Each model call has a 5-second connection and 120-second read timeout.
-- Each specialist has at most two attempts, with a bounded 250 ms / 500 ms backoff.
-- Planner output is parsed and validated against a typed schema before writing begins.
-- Writer/reviewer outputs must be non-empty and remain under a 6,000-character bound.
-- No shell, browser, filesystem, or network tools are exposed to specialists. The orchestrator alone writes the final DOCX.
-- A failed retry budget yields an explicit `failed` run; it never becomes a success based on an agent's self-report.
+- Independent research and planning nodes run in controlled parallelism, capped at two workers.
+- Section execution and verification are likewise capped at two concurrent workers.
+- Every model request has a 5-second connection timeout and 120-second read timeout.
+- Specialist retries are bounded to two attempts with 250 ms / 500 ms backoff.
+- The Quality Gate allows only one repair round. Failed verification after repair stops the run; it does not silently deliver.
+- Specialists have no shell, browser, filesystem, or external-network tool permissions. The Research Agent must return an empty source list because AgentForge has no retrieval connector.
 
-## Tracing
+## Trace model
 
-Runs and events are persisted to the local SQLite database. Each event includes agent name, event type, model, attempt, token counts returned by Ollama, declared tools, details, and timestamp.
-
-Authenticated users can retrieve their own trace with `GET /runs/{run_id}`. Failed `POST /agent` responses include the `run_id` for inspection.
+SQLite stores a run record and append-only events. Events capture the graph node, model, attempt, token counts supplied by Ollama, declared tools, graph transition, timestamp, and failure details. The authenticated owner can retrieve a trace using `GET /runs/{run_id}`.

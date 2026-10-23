@@ -23,3 +23,17 @@ class WritingAgent(SpecialistAgent):
             return text.strip()
 
         return self.complete(run_id, prompt, validate)
+
+    def repair(self, run_id: str, title: str, content: str, issues: list[str]) -> str:
+        prompt = f"""You are the Execution Agent repairing one document section.
+Section title: {title}
+Current content: {content}
+Verification issues: {'; '.join(issues)}
+Return only a corrected section in plain text. Do not mention the review process."""
+
+        def validate(text: str) -> str:
+            if not text.strip() or len(text) > 6_000:
+                raise ValueError("Repair output is invalid")
+            return text.strip()
+
+        return self.complete(run_id, prompt, validate)

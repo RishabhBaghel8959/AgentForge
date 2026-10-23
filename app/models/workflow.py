@@ -29,6 +29,19 @@ class ExecutionPlan(BaseModel):
         return tasks
 
 
+class ResearchBrief(BaseModel):
+    """Evidence supplied to the execution agent; unsupported claims are excluded."""
+    context: list[str] = Field(default_factory=list, max_length=8)
+    sources: list[str] = Field(default_factory=list, max_length=5)
+    limitations: list[str] = Field(default_factory=list, max_length=5)
+
+
+class VerificationResult(BaseModel):
+    passed: bool
+    issues: list[str] = Field(default_factory=list, max_length=5)
+    quality_score: int = Field(ge=0, le=100)
+
+
 class RunStatus(StrEnum):
     RUNNING = "running"
     SUCCEEDED = "succeeded"
@@ -41,8 +54,10 @@ class WorkflowState(BaseModel):
     request: str
     status: RunStatus = RunStatus.RUNNING
     plan: ExecutionPlan | None = None
+    research: ResearchBrief | None = None
     draft_sections: dict[str, str] = Field(default_factory=dict)
     reviewed_sections: dict[str, str] = Field(default_factory=dict)
+    verification: dict[str, VerificationResult] = Field(default_factory=dict)
     document_path: str | None = None
     error: str | None = None
 

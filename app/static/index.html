@@ -4,16 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#09111f" />
-    <title>FluidAI · Agent Studio</title>
+    <title>AgentForge · Agent Studio</title>
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
     <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
     <main class="shell">
       <header class="topbar">
-        <a class="brand" href="/" aria-label="FluidAI home"><span class="brand-mark"><i></i><i></i><i></i></span><span>fluid<span>AI</span></span></a>
-        <div class="system-status"><span></span> Ollama connected</div>
+        <a class="brand" href="/" aria-label="AgentForge home"><span class="brand-mark"><i></i><i></i><i></i></span><span>AgentForge</span></a>
+        <div id="user-menu" class="user-menu hidden"><span id="user-email"></span><button id="logout-button" class="logout-button" type="button">Log out</button></div>
       </header>
+      <section id="auth-view" class="auth-view">
+        <div class="auth-card">
+          <div class="eyebrow"><span></span> AGENTFORGE ACCOUNT</div>
+          <h1 id="auth-title">Welcome back</h1>
+          <p id="auth-copy">Log in to create and download your documents.</p>
+          <form id="auth-form">
+            <label for="email">Email address</label>
+            <input id="email" type="email" autocomplete="email" required placeholder="you@example.com" />
+            <label for="password">Password</label>
+            <input id="password" type="password" autocomplete="current-password" minlength="8" required placeholder="At least 8 characters" />
+            <button id="auth-submit" type="submit">Log in</button>
+          </form>
+          <p id="auth-toggle" class="auth-toggle">New to AgentForge? <button type="button">Create an account</button></p>
+          <p id="auth-error" class="auth-error hidden" role="alert"></p>
+        </div>
+      </section>
+      <div id="app-view" class="hidden">
       <section class="hero">
         <div class="eyebrow"><span></span> AUTONOMOUS DOCUMENT WORKSPACE</div>
         <h1>From an idea to a polished<br /><em>document, thoughtfully.</em></h1>
@@ -47,7 +64,8 @@
         <div class="result-grid"><section class="plan-card"><h3>Execution plan</h3><p id="plan-goal"></p><div id="assumptions" class="assumptions"></div><div id="task-list" class="task-list"></div></section><section class="document-card"><div class="document-toolbar"><span class="doc-dot"></span><span>Generated preview</span><span id="section-count"></span></div><div id="document-preview" class="document-preview"></div></section></div>
       </section>
       <div id="error-message" class="error hidden" role="alert"></div>
-      <footer>FLUIDAI AGENT STUDIO <span>·</span> BUILT FOR THOUGHTFUL WORK</footer>
+      <footer>AGENTFORGE AGENT STUDIO <span>·</span> BUILT FOR THOUGHTFUL WORK</footer>
+      </div>
     </main>
     <script src="/static/app.js"></script>
   </body>

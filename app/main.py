@@ -5,6 +5,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router
+from app.core.auth import initialise_database
+from app.core.tracing import initialise_trace_store
 
 app = FastAPI(
     title="Autonomous AI Agent",
@@ -12,6 +14,12 @@ app = FastAPI(
 )
 
 app.include_router(router)
+
+
+@app.on_event("startup")
+def startup() -> None:
+    initialise_database()
+    initialise_trace_store()
 
 static_dir = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=static_dir), name="static")

@@ -1,6 +1,7 @@
 from docx import Document
 from docx.shared import Pt
 from pathlib import Path
+import re
 
 
 class DocxGenerator:
@@ -31,7 +32,8 @@ class DocxGenerator:
         output_dir = Path("output")
         output_dir.mkdir(exist_ok=True)
 
-        filename = document_title.replace(" ", "_") + ".docx"
+        safe_title = re.sub(r'[<>:"/\\|?*\x00-\x1f]+', "_", document_title).strip(" ._")
+        filename = (safe_title or "Generated_Document")[:100] + ".docx"
 
         filepath = output_dir / filename
 

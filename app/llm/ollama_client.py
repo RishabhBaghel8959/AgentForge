@@ -1,5 +1,7 @@
 import requests
 
+from app.models.workflow import GenerationResult
+
 
 class OllamaClient:
     def __init__(
@@ -11,6 +13,9 @@ class OllamaClient:
         self.base_url = base_url
 
     def generate(self, prompt: str) -> str:
+        return self.generate_with_metadata(prompt).text
+
+    def generate_with_metadata(self, prompt: str) -> GenerationResult:
 
         payload = {
             "model": self.model,
@@ -21,9 +26,18 @@ class OllamaClient:
         response = requests.post(
             f"{self.base_url}/api/generate",
             json=payload,
-            timeout=300
+            timeout=(5, 120)
         )
 
         response.raise_for_status()
 
-        return response.json()["response"]
+        body = response.json()
+        text = body.get("response")
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError("Ollama returned an empty response")
+        return GenerationResult(
+            text=text.strip(),
+            model=body.get("model", self.model),
+            prompt_tokens=body.get("prompt_eval_count"),
+            completion_tokens=body.get("eval_count"),
+        )

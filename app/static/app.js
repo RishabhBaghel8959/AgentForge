@@ -7,7 +7,83 @@ const results = document.querySelector('#results');
 const errorMessage = document.querySelector('#error-message');
 const progressBar = document.querySelector('#progress-bar');
 const activityTitle = document.querySelector('#activity-title');
+const authView = document.querySelector('#auth-view');
+const appView = document.querySelector('#app-view');
+const authForm = document.querySelector('#auth-form');
+const authTitle = document.querySelector('#auth-title');
+const authCopy = document.querySelector('#auth-copy');
+const authSubmit = document.querySelector('#auth-submit');
+const authToggle = document.querySelector('#auth-toggle button');
+const authError = document.querySelector('#auth-error');
+const userMenu = document.querySelector('#user-menu');
+const userEmail = document.querySelector('#user-email');
+const logoutButton = document.querySelector('#logout-button');
+let authMode = 'login';
+let accessToken = localStorage.getItem('agentforge_token');
 const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' })[char]);
+
+function setAuthenticated(user) {
+  userEmail.textContent = user.email;
+  authView.classList.add('hidden');
+  appView.classList.remove('hidden');
+  userMenu.classList.remove('hidden');
+}
+
+function showLogin() {
+  localStorage.removeItem('agentforge_token');
+  accessToken = null;
+  appView.classList.add('hidden');
+  userMenu.classList.add('hidden');
+  authView.classList.remove('hidden');
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  const creating = mode === 'signup';
+  authTitle.textContent = creating ? 'Create your account' : 'Welcome back';
+  authCopy.textContent = creating ? 'Save your account locally and start creating documents.' : 'Log in to create and download your documents.';
+  authSubmit.textContent = creating ? 'Create account' : 'Log in';
+  authToggle.parentElement.firstChild.textContent = creating ? 'Already have an account? ' : 'New to AgentForge? ';
+  authToggle.textContent = creating ? 'Log in' : 'Create an account';
+  document.querySelector('#password').autocomplete = creating ? 'new-password' : 'current-password';
+  authError.classList.add('hidden');
+}
+
+authToggle.addEventListener('click', () => setAuthMode(authMode === 'login' ? 'signup' : 'login'));
+logoutButton.addEventListener('click', showLogin);
+
+authForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const email = document.querySelector('#email').value.trim();
+  const password = document.querySelector('#password').value;
+  authSubmit.disabled = true;
+  authError.classList.add('hidden');
+  try {
+    const response = await fetch(`/auth/${authMode}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || 'Authentication failed.');
+    accessToken = data.access_token;
+    localStorage.setItem('agentforge_token', accessToken);
+    setAuthenticated(data.user);
+    authForm.reset();
+  } catch (error) {
+    authError.textContent = error.message;
+    authError.classList.remove('hidden');
+  } finally {
+    authSubmit.disabled = false;
+  }
+});
+
+async function restoreSession() {
+  if (!accessToken) return;
+  try {
+    const response = await fetch('/auth/me', { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!response.ok) throw new Error();
+    setAuthenticated(await response.json());
+  } catch {
+    showLogin();
+  }
+}
 
 requestField.addEventListener('input', () => { characterCount.textContent = `${requestField.value.length} / 1500`; });
 
@@ -63,7 +139,7 @@ form.addEventListener('submit', async (event) => {
   const animation = showWorkingState();
   activity.scrollIntoView({ behavior: 'smooth', block: 'center' });
   try {
-    const response = await fetch('/agent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ request }) });
+    const response = await fetch('/agent', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` }, body: JSON.stringify({ request }) });
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || 'The agent could not complete this request.');
     window.clearInterval(animation);
@@ -82,3 +158,17 @@ form.addEventListener('submit', async (event) => {
     runButton.querySelector('span').textContent = 'Start building';
   }
 });
+
+document.querySelector('#download-link').addEventListener('click', async (event) => {
+  if (!accessToken || !event.currentTarget.href) return;
+  event.preventDefault();
+  const link = event.currentTarget;
+  const response = await fetch(link.href, { headers: { Authorization: `Bearer ${accessToken}` } });
+  if (!response.ok) { errorMessage.textContent = 'Could not download the document.'; errorMessage.classList.remove('hidden'); return; }
+  const blobUrl = URL.createObjectURL(await response.blob());
+  const temporaryLink = document.createElement('a');
+  temporaryLink.href = blobUrl; temporaryLink.download = link.download || 'document.docx'; temporaryLink.click();
+  URL.revokeObjectURL(blobUrl);
+});
+
+restoreSession();

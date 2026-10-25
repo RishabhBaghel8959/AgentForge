@@ -69,6 +69,8 @@ docker compose up --build
 
 Open [http://127.0.0.1:8000](http://127.0.0.1:8000). The container reaches a locally running Ollama service through `host.docker.internal:11434`. Set `OLLAMA_BASE_URL` in `.env` if Ollama is hosted elsewhere.
 
+On Linux hosts (including AWS EC2), Compose maps `host.docker.internal` to the Docker host automatically, so Ollama can run on the host without exposing port 11434 publicly.
+
 ## Workflow
 
 ```text

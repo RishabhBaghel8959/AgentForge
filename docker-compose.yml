@@ -12,6 +12,8 @@ services:
     volumes:
       - app_data:/app/data
       - app_output:/app/output
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       redis:
         condition: service_healthy

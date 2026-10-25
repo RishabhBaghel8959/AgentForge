@@ -56,6 +56,19 @@ python test_ollama.py
 
 The development entry point deliberately runs without Uvicorn auto-reload to avoid the Windows named-pipe permission issue. Open [http://127.0.0.1:8000](http://127.0.0.1:8000), create an account, then sign in to access the document workspace.
 
+## Docker with Redis
+
+Docker Compose runs the API and a persistent Redis instance. Redis caches successful agent responses per user and request for `CACHE_TTL_SECONDS` (one hour by default); SQLite continues to hold the durable user and run-trace data.
+
+Create `.env` from `.env.example`, set a real `JWT_SECRET`, then start the stack:
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build
+```
+
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000). The container reaches a locally running Ollama service through `host.docker.internal:11434`. Set `OLLAMA_BASE_URL` in `.env` if Ollama is hosted elsewhere.
+
 ## Workflow
 
 ```text

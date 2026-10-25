@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse
 from app.api.dependencies import current_user
 from app.core.auth import create_access_token, create_user, find_user, verify_password
+from app.core.cache import AgentResultCache
 from app.models.schemas import AgentRequest, Credentials
 from app.executor.executor import AgentExecutor
 from app.executor.executor import RunFailed
@@ -12,6 +13,7 @@ from app.core.tracing import RunTracer
 router = APIRouter()
 
 executor = AgentExecutor()
+result_cache = AgentResultCache()
 
 @router.post("/auth/signup", status_code=status.HTTP_201_CREATED)
 def signup(credentials: Credentials):
@@ -34,8 +36,15 @@ def me(user: dict = Depends(current_user)):
 
 @router.post("/agent")
 def run_agent(request: AgentRequest, user: dict = Depends(current_user)):
+    user_id = int(user["sub"])
+    cached_result = result_cache.get(user_id, request.request)
+    if cached_result is not None:
+        return {**cached_result, "cached": True}
+
     try:
-        return executor.run(request.request, int(user["sub"]))
+        result = executor.run(request.request, user_id)
+        result_cache.set(user_id, request.request, result)
+        return {**result, "cached": False}
     except RunFailed as error:
         raise HTTPException(status_code=502, detail={"message": str(error), "run_id": error.run_id}) from error
 

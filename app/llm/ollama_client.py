@@ -1,3 +1,5 @@
+import os
+
 import requests
 
 from app.models.workflow import GenerationResult
@@ -7,10 +9,10 @@ class OllamaClient:
     def __init__(
         self,
         model: str = "qwen2.5:7b",
-        base_url: str = "http://localhost:11434"
+        base_url: str | None = None
     ):
         self.model = model
-        self.base_url = base_url
+        self.base_url = base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
     def generate(self, prompt: str) -> str:
         return self.generate_with_metadata(prompt).text

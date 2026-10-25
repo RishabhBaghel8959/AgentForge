@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(PROJECT_DIR / ".env")
-DATABASE_PATH = PROJECT_DIR / "agentforge.db"
+DATABASE_PATH = Path(os.getenv("DATABASE_PATH", PROJECT_DIR / "agentforge.db"))
 JWT_SECRET = os.getenv("JWT_SECRET", "change-this-development-secret-before-deploying")
 JWT_ALGORITHM = "HS256"
 TOKEN_LIFETIME_HOURS = 24

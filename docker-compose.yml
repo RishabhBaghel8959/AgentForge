@@ -1,0 +1,35 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env before starting}
+      DATABASE_PATH: /app/data/agentforge.db
+      REDIS_URL: redis://redis:6379/0
+      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-3600}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+    volumes:
+      - app_data:/app/data
+      - app_output:/app/output
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  app_data:
+  app_output:
+  redis_data:
